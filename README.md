@@ -1,0 +1,7 @@
+# README
+---
+
+```
+$ npm install
+$ grunt
+```
