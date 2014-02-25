@@ -14,11 +14,11 @@ class Circle
     document.getElementById('field').appendChild e
     return
 
-  moveCircle : (id, dx, dy) ->
+  moveCircle : (id, dx, dy, v) ->
     e = document.getElementById id
     o = new Object()
-    o.cx = parseFloat(e.getAttribute 'cx') + dx*8
-    o.cy = parseFloat(e.getAttribute 'cy') + dy*8
+    o.cx = parseFloat(e.getAttribute 'cx') + dx*v
+    o.cy = parseFloat(e.getAttribute 'cy') + dy*v
     e.setAttribute 'cx', o.cx
     e.setAttribute 'cy', o.cy
     return o
@@ -104,13 +104,15 @@ class Field
 class Agent extends Circle
 ##########################
   color: 'rgba(100, 100, 100, 0.5)'
+  velocity: 8
 
   constructor: (@id, @x, @y) ->
     @createCircle @id, @x, @y, 10, this.color
     return
 
   move: ->
-    d = @moveCircle @id, @dx, @dy
+    console.log
+    d = @moveCircle @id, @dx, @dy, @velocity
     @x = d.cx
     @y = d.cy
 
@@ -132,10 +134,10 @@ class Agent extends Circle
     targets[aimedTargetId].aimed()
     return
 
-##########
+######################
 class Army
-##########
 # Army Has Many Agents
+######################
   agentNum : 0
   maxAgentNum : document.getElementsByName('agentNumber')[0].value
   agents = new Array()
@@ -149,7 +151,6 @@ class Army
     id = 'a' + Army::agentNum
     Army::agentNum++
     agents.push new Agent( id, x, y )
-   # console.log 'agentNum:', Army::agentNum
     return
 
   moveAgents: (targets) ->
@@ -159,11 +160,9 @@ class Army
     return
 
 
-
 window.onload = (event) ->
   field = new Field()
   army = new Army()
-
 
   document.getElementById('setButton').onclick = ->
     Army::maxAgentNum = document.getElementsByName('agentNumber')[0].value
@@ -177,17 +176,8 @@ window.onload = (event) ->
 
   setInterval ->
     army.moveAgents(field.getTargets())
-  , 400
+  , 40
   return
-
-# click to add a agent
-# window.addEventListener 'click', (event) ->
-# document.getElementById('field').onclick = (event) ->
-#   army.createAgent( event.clientX, event.clientY )
-#   return
-
-
-
 
 
 
