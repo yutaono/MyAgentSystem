@@ -16,9 +16,19 @@ class Circle
 
   moveCircle : (id, dx, dy, v) ->
     e = document.getElementById id
+
     o = new Object()
     o.cx = parseFloat(e.getAttribute 'cx') + dx*v
     o.cy = parseFloat(e.getAttribute 'cy') + dy*v
+    if o.cx > Field::width
+      o.cx = Field::width
+    if o.cx < 0
+      o.cx = 0
+    if o.cy > Field::height
+      o.cy = Field::height
+    if o.cy < 0
+      o.cy = 0
+      
     e.setAttribute 'cx', o.cx
     e.setAttribute 'cy', o.cy
     return o
@@ -43,7 +53,8 @@ class Target extends Circle
 ###########################
   colors: ['skyblue', 'pink']
   num: 0
-  @life: true
+  velocity: 0
+  life: true
 
   constructor: () ->
     @id = 't' + Target::num++
@@ -65,14 +76,39 @@ class Target extends Circle
 
   aimed: () ->
     @changeColor @id, this.colors[1]
-    
+
+  move: ->
+    console.log
+    d = @moveCircle @id, @dx, @dy, @velocity
+    @x = d.cx
+    @y = d.cy
+    console.log @x, @y
+
+  setDirectionFromAgents: (agents)->
+    minDistance =  9999999 # first, very large number
+    @dx = 0
+    @dy = 0
+#    aimedAgentid = 0
+    for a, i in agents
+      d = Math.sqrt( Math.pow(a.x-@x, 2) + Math.pow(a.y-@y, 2) )
+      # if d < 4.2
+      #   Field.prototype.killTargetById(t.id)
+      #   return
+      if minDistance > d
+        minDistance = d
+        @dx = - (a.x-@x)/d
+        @dy = - (a.y-@y)/d
+#        aimedAgentId = i
+#    targets[aimedTargetId].aimed()
+    return
+        
 
 #########################
 class Field
 # Field Has Many Targets
 #     
 #########################
-  weight: 400
+  width: 400
   height: 400
   maxTargetNum: document.getElementsByName('targetNumber')[0].value
   targets = new Array()
@@ -84,13 +120,19 @@ class Field
   setTargets: ()->
     targets = new Array()
     Target::deleteAllCircle()
-    for i in [1..this.maxTargetNum]
+    for i in [1..@maxTargetNum]
       targets.push new Target()
     return
 
   getTargets: ()->
     return targets
 
+  moveTargets: (agents) ->
+    for t in targets
+      t.setDirectionFromAgents(agents)
+      t.move()
+    return 
+        
   killTargetById: (id) ->
     for t,i in targets
       if t.id is id
@@ -107,7 +149,7 @@ class Agent extends Circle
   velocity: 8
 
   constructor: (@id, @x, @y) ->
-    @createCircle @id, @x, @y, 10, this.color
+    @createCircle @id, @x, @y, 10, @color
     return
 
   move: ->
@@ -123,7 +165,7 @@ class Agent extends Circle
     aimedTargetid = 0
     for t, i in targets
       d = Math.sqrt( Math.pow(t.x-@x, 2) + Math.pow(t.y-@y, 2) )
-      if d < 4.2
+      if d < 5.0
         Field.prototype.killTargetById(t.id)
         return
       if minDistance > d
@@ -159,6 +201,8 @@ class Army
       a.move()
     return
 
+  getAgents: ()->
+    return agents
 
 window.onload = (event) ->
   field = new Field()
@@ -176,6 +220,7 @@ window.onload = (event) ->
 
   setInterval ->
     army.moveAgents(field.getTargets())
+    field.moveTargets(army.getAgents())
   , 40
   return
 
