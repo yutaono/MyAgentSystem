@@ -177,7 +177,7 @@ window.onload = (event) ->
 
   setInterval ->
     army.moveAgents(field.getTargets())
-  , 400
+  , 40
   return
 
 # click to add a agent

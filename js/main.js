@@ -234,7 +234,7 @@ window.onload = function(event) {
   };
   setInterval(function() {
     return army.moveAgents(field.getTargets());
-  }, 400);
+  }, 40);
 };
 
 //# sourceMappingURL=main.js.map
