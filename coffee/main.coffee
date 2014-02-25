@@ -1,6 +1,30 @@
 # constants
 SVG = 'http://www.w3.org/2000/svg'
+dt = 50
 
+##########
+class Line
+##########
+  createLine : (id, x, y, color) ->
+    e = document.createElementNS SVG,'path'
+    e.setAttribute 'id', id
+    e.setAttribute 'd', 'M' + x + ',' + y
+    e.setAttribute 'stroke', color
+    e.setAttribute 'stroke-width', 2
+    e.setAttribute 'fill', 'none'
+    document.getElementById('field').appendChild e
+    return
+    
+  updateLine : (id, x, y) ->
+    e = document.getElementById id
+    d = e.getAttribute 'd'
+    e.setAttribute 'd', d + ' L' + x + ',' + y 
+
+  exitLine : (id) ->
+    e = document.getElementById id
+    d = e.getAttribute 'd'
+    e.setAttribute 'd', d + ' z'
+    
 ############
 class Circle
 ############
@@ -82,24 +106,17 @@ class Target extends Circle
     d = @moveCircle @id, @dx, @dy, @velocity
     @x = d.cx
     @y = d.cy
-    console.log @x, @y
 
   setDirectionFromAgents: (agents)->
     minDistance =  9999999 # first, very large number
     @dx = 0
     @dy = 0
-#    aimedAgentid = 0
     for a, i in agents
       d = Math.sqrt( Math.pow(a.x-@x, 2) + Math.pow(a.y-@y, 2) )
-      # if d < 4.2
-      #   Field.prototype.killTargetById(t.id)
-      #   return
       if minDistance > d
         minDistance = d
         @dx = - (a.x-@x)/d
         @dy = - (a.y-@y)/d
-#        aimedAgentId = i
-#    targets[aimedTargetId].aimed()
     return
         
 
@@ -147,9 +164,12 @@ class Agent extends Circle
 ##########################
   color: 'rgba(100, 100, 100, 0.5)'
   velocity: 8
+  path: new Line()
 
   constructor: (@id, @x, @y) ->
     @createCircle @id, @x, @y, 10, @color
+    @pathId = 'p'+@id.match( /\d+/g )
+    @path.createLine @pathId, @x, @y, @color
     return
 
   move: ->
@@ -157,6 +177,7 @@ class Agent extends Circle
     d = @moveCircle @id, @dx, @dy, @velocity
     @x = d.cx
     @y = d.cy
+    @path.updateLine @pathId, @x, @y
 
   setDirectionFromTargets: (targets)->
     minDistance =  9999999 # first, very large number
@@ -167,14 +188,14 @@ class Agent extends Circle
       d = Math.sqrt( Math.pow(t.x-@x, 2) + Math.pow(t.y-@y, 2) )
       if d < 5.0
         Field.prototype.killTargetById(t.id)
-        return
+        return false
       if minDistance > d
         minDistance = d
         @dx = (t.x-@x)/d
         @dy = (t.y-@y)/d
         aimedTargetId = i
     targets[aimedTargetId].aimed()
-    return
+    return true
 
 ######################
 class Army
@@ -197,8 +218,8 @@ class Army
 
   moveAgents: (targets) ->
     for a in agents
-      a.setDirectionFromTargets(targets)
-      a.move()
+      if a.setDirectionFromTargets(targets)
+        a.move()
     return
 
   getAgents: ()->
@@ -220,8 +241,8 @@ window.onload = (event) ->
 
   setInterval ->
     army.moveAgents(field.getTargets())
-    field.moveTargets(army.getAgents())
-  , 40
+#    field.moveTargets(army.getAgents())
+  , dt
   return
 
 
