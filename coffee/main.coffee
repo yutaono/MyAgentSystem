@@ -5,6 +5,9 @@ dt = 50
 ##########
 class Line
 ##########
+  points = new Array()
+  length: 0
+ 
   createLine : (id, x, y, color) ->
     e = document.createElementNS SVG,'path'
     e.setAttribute 'id', id
@@ -13,17 +16,31 @@ class Line
     e.setAttribute 'stroke-width', 2
     e.setAttribute 'fill', 'none'
     document.getElementById('field').appendChild e
+    points = new Array()
+    points.push @p(x,y)
     return
     
   updateLine : (id, x, y) ->
     e = document.getElementById id
     d = e.getAttribute 'd'
-    e.setAttribute 'd', d + ' L' + x + ',' + y 
+    e.setAttribute 'd', d + ' L' + x + ',' + y
+    points.push @p(x,y)
+    
+    l = points.length
+    @length += Math.sqrt( Math.pow(points[l-2].x - points[l-1].x, 2) + Math.pow(points[l-2].y - points[l-1].y, 2) )
+    document.getElementById('distance').innerHTML = Math.floor @length
 
   exitLine : (id) ->
     e = document.getElementById id
     d = e.getAttribute 'd'
     e.setAttribute 'd', d + ' z'
+
+  p: (x,y) ->
+    o = new Object()
+    o.x = x
+    o.y = y
+    return o
+
     
 ############
 class Circle
@@ -77,7 +94,7 @@ class Target extends Circle
 ###########################
   colors: ['skyblue', 'pink']
   num: 0
-  velocity: 0
+  velocity: 2
   life: true
 
   constructor: () ->
@@ -102,13 +119,12 @@ class Target extends Circle
     @changeColor @id, this.colors[1]
 
   move: ->
-    console.log
     d = @moveCircle @id, @dx, @dy, @velocity
     @x = d.cx
     @y = d.cy
 
   setDirectionFromAgents: (agents)->
-    minDistance =  9999999 # first, very large number
+    minDistance = 9999999 # first, very large number
     @dx = 0
     @dy = 0
     for a, i in agents
@@ -117,8 +133,7 @@ class Target extends Circle
         minDistance = d
         @dx = - (a.x-@x)/d
         @dy = - (a.y-@y)/d
-    return
-        
+    return        
 
 #########################
 class Field
